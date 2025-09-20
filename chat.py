@@ -1,17 +1,15 @@
 from fastapi import FastAPI, Request
 import google.generativeai as genai
 import os
-from dotenv import load_dotenv
 
-# 🔑 Configure Gemini with your API key
-load_dotenv()
+# Configure Gemini
 genai.configure(api_key=os.getenv("GEMINI_KEY"))
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-# 🚀 FastAPI app
 app = FastAPI()
 
-# 🧠 System knowledge (baked in before any user query)
+
+# Static knowledge prompt (system role)
 SYSTEM_PROMPT = """
 You are WardFlow AI, a hospital operations assistant specializing in bed allocation and resource optimization.
 
@@ -22,11 +20,6 @@ Core knowledge:
 - During flu season or local outbreaks, forecast admissions increase by ~20%.
 - Goal: Avoid bottlenecks and maximize bed turnover efficiency.
 - Always give concise, actionable answers suitable for hospital administrators.
-- Emergency admissions are unpredictable and usually require higher priority.
-- Elective admissions are planned and can be shifted if necessary.
-- Patients older than 70 have an average admission length of +2 days.
-- Patients with cardiac conditions are ICU-dependent and rarely transferable.
-- Expected admission length can be used to project bed release dates.
 """
 
 @app.post("/chat")
@@ -34,14 +27,13 @@ async def chat(request: Request):
     body = await request.json()
     user_message = body.get("message", "")
 
-    # Example fake forecast + optimization context (swap with real endpoints later)
+    # Example dynamic context (replace with real /forecast + /optimize later)
     forecast_data = {"ICU": 92, "General": 75, "Pediatrics": 68}
     recommendations = [
         "Transfer 2 patients from ICU to General Ward.",
         "Increase cleaning staff in General due to high turnover."
     ]
 
-    # Construct the full prompt
     prompt = f"""
     {SYSTEM_PROMPT}
 
@@ -51,7 +43,5 @@ async def chat(request: Request):
     The hospital admin asks: {user_message}
     """
 
-    # Call Gemini
     response = model.generate_content(prompt)
-
     return {"response": response.text}

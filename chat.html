@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Chatbot Interface</title>
+  <link rel="stylesheet" href="main.css">
+  <style>
+    /* small overrides for full-page chat */
+    body{ background:var(--bg); }
+    .chat-page{ max-width:880px; margin:40px auto; background:white; padding:18px; border-radius:10px }
+    .config-row{ display:flex; gap:8px; margin-bottom:12px }
+    .config-row input{ flex:1 }
+    .messages{ border:1px solid #eef2ff; height:420px; overflow:auto; padding:12px; border-radius:8px; background:#fbfdff }
+    .message{ margin-bottom:10px }
+    .message.user{ text-align:right }
+    .controls{ display:flex; gap:8px; margin-top:10px }
+    .small{ font-size:13px; color:var(--muted) }
+  </style>
+</head>
+<body>
+  <div class="container chat-page">
+    <h2>Chatbot Tester</h2>
+    <p class="small">Enter the API endpoint that accepts POST JSON {"message": "..."} and returns JSON {"reply":"..."} (or adjust the request in code).</p>
+
+    <div class="config-row">
+      <input id="apiUrl" placeholder="API URL (e.g. https://example.com/api/chat)" value="">
+      <input id="apiKey" placeholder="Optional Authorization token" value="">
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="controls">
+      <input id="textInput" placeholder="Type your message" style="flex:1;padding:8px;border-radius:6px;border:1px solid #e6edf3">
+      <button id="sendBtn">Send</button>
+    </div>
+
+    <div style="margin-top:12px" class="small">
+      Response preview is appended below. This page only requires an API URL that accepts a JSON POST with a "message" field and returns a JSON reply.
+    </div>
+  </div>
+
+  <script src="chat-page.js"></script>
+</body>
+</html>
