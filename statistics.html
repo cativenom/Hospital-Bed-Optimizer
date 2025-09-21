@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link rel="stylesheet" href="main.css">
+  <title>WardFlow AI Dashboard</title>
+</head>
+<body>
+  <!-- Top-left buttons -->
+  <div class="top-left-buttons">
+    <a href="index.html" class="btn">Home</a>
+    <a href="chat.html?api=http://127.0.0.1:8000/chat" class="btn">Chat</a>
+  </div>
+
+  <header>
+    <h1>WardFlow AI Dashboard</h1>
+    <p>Real-time hospital bed occupancy and capacity monitoring</p>
+  </header>
+
+  <main>
+    <!-- Pie charts section -->
+    <section class="card">
+      <h2>Admissions vs Capacity by Type</h2>
+      <div id="pie-charts" class="chart-row"></div>
+    </section>
+
+    <!-- Net admissions line chart section -->
+    <section class="card">
+      <h2>Weekly Net Admissions</h2>
+      <div id="net-line-chart" class="chart"></div>
+    </section>
+  </main>
+
+  <script>
+    // Sample dataset
+    const data = [
+      { date: "2024-01-31", type: "Urgent", status: "discharge", count: 3 },
+      { date: "2019-08-20", type: "Emergency", status: "discharge", count: 7 },
+      { date: "2022-09-22", type: "Emergency", status: "admission", count: 8 },
+      { date: "2020-11-18", type: "Elective", status: "discharge", count: 2 },
+      { date: "2022-09-19", type: "Urgent", status: "discharge", count: 10 },
+      { date: "2023-12-20", type: "Urgent", status: "admission", count: 2 },
+      { date: "2020-11-03", type: "Emergency", status: "discharge", count: 10 },
+      { date: "2021-12-28", type: "Emergency", status: "discharge", count: 2 },
+      { date: "2020-07-01", type: "Elective", status: "admission", count: 1 },
+      { date: "2021-05-23", type: "Elective", status: "admission", count: 6 },
+      { date: "2020-04-19", type: "Urgent", status: "discharge", count: 8 },
+      { date: "2023-08-13", type: "Urgent", status: "admission", count: 6 },
+      { date: "2019-12-12", type: "Emergency", status: "discharge", count: 7 },
+      { date: "2020-05-22", type: "Urgent", status: "discharge", count: 6 },
+      { date: "2021-10-08", type: "Urgent", status: "admission", count: 9 },
+      { date: "2023-01-01", type: "Elective", status: "discharge", count: 1 },
+      { date: "2020-06-23", type: "Elective", status: "admission", count: 7 },
+      { date: "2020-03-08", type: "Urgent", status: "discharge", count: 4 },
+      { date: "2021-03-04", type: "Elective", status: "admission", count: 6 },
+      { date: "2022-11-15", type: "Elective", status: "admission", count: 3 },
+      { date: "2023-06-28", type: "Elective", status: "admission", count: 4 },
+      { date: "2020-01-21", type: "Urgent", status: "admission", count: 9 },
+      { date: "2022-05-12", type: "Urgent", status: "discharge", count: 3 },
+      { date: "2021-08-02", type: "Urgent", status: "discharge", count: 9 },
+      { date: "2020-05-15", type: "Emergency", status: "discharge", count: 7 },
+      { date: "2020-05-15", type: "Urgent", status: "admission", count: 8 },
+      { date: "2023-12-23", type: "Elective", status: "discharge", count: 9 },
+      { date: "2022-06-21", type: "Emergency", status: "admission", count: 2 },
+      { date: "2021-01-03", type: "Emergency", status: "discharge", count: 2 }
+    ];
+
+    const capacities = { Urgent: 100, Emergency: 80, Elective: 50 };
+
+    // --- PIE CHARTS ---
+    function drawPieCharts() {
+      const container = document.getElementById('pie-charts');
+      container.innerHTML = '';
+      const types = [...new Set(data.map(d => d.type))];
+
+      types.forEach(type => {
+        const total = data
+          .filter(d => d.type === type && d.status === "admission")
+          .reduce((sum, d) => sum + d.count, 0);
+
+        const values = [total, capacities[type] - total];
+        const labels = ["Admitted", "Remaining Capacity"];
+
+        const pieDiv = document.createElement('div');
+        pieDiv.id = `pie-${type}`;
+        pieDiv.style.width = '500px';
+        pieDiv.style.height = '300px';
+        pieDiv.style.display = 'inline-block';
+        pieDiv.style.margin = '40px';
+        container.appendChild(pieDiv);
+
+        const dataPie = [{
+          values,
+          labels,
+          type: 'pie',
+          marker: { colors: ['#4da6ff', '#d9d9d9'] },
+          textinfo: 'label+percent',
+          hole: 0.4
+        }];
+
+        const layoutPie = { title: `${type} Admissions vs Capacity` };
+        Plotly.newPlot(pieDiv.id, dataPie, layoutPie, { responsive: true });
+      });
+    }
+
+    // --- NET ADMISSIONS LINE CHART ---
+    function drawNetLineChart() {
+    const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const netByDay = { Mon:0, Tue:0, Wed:0, Thu:0, Fri:0, Sat:0, Sun:0 };
+
+    data.forEach(d => {
+      const date = new Date(d.date);
+      const day = date.getDay(); // 0=Sun,1=Mon,...6=Sat
+      const weekday = weekdays[(day + 6) % 7]; // shift so Mon=0
+      const delta = (d.status === "admission" ? 1 : -1) * d.count;
+      netByDay[weekday] += delta;
+    });
+
+    const values = weekdays.map(day => netByDay[day]);
+
+    const trace = {
+      x: weekdays,
+      y: values,
+      type: 'scatter',
+      mode: 'lines+markers',
+      line: { color: '#4da6ff' },
+      fill: 'tozeroy',
+      fillcolor: 'rgba(77,166,255,0.3)',
+      name: 'Net Admissions'
+    };
+
+    const layout = {
+      title: 'Net Admissions by Weekday (Mon–Sun)',
+      xaxis: { title: 'Weekday' },
+      yaxis: { title: 'Net Patients', zeroline: true, zerolinecolor: '#ff4d4d', zerolinewidth: 2 },
+      plot_bgcolor: '#ffffff',
+      paper_bgcolor: '#ffffff'
+    };
+
+    Plotly.newPlot('net-line-chart', [trace], layout, { responsive: true });
+  }
+
+
+
+    window.onload = () => {
+      drawPieCharts();
+      drawNetLineChart();
+    };
+  </script>
+</body>
+</html>

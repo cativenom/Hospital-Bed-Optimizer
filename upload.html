@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload Hospital Data</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+  <div class="top-left-buttons">
+    <a href="index.html" class="btn">Home</a>
+    <a href="chat.html?api=http://127.0.0.1:8000/chat" class="btn">Chat</a>
+  </div>
+
+  <header>
+    <h1>Upload Hospital CSV Data</h1>
+    <p>Upload CSV files in the format: Date of Admission, Admission Type, Patient Status, Count</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Select CSV File</h2>
+      <input type="file" id="csvFile" accept=".csv" class="btn">
+      <button id="uploadBtn" class="btn">Upload & Preview</button>
+      <div id="preview" style="margin-top: 20px;"></div>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+      const fileInput = document.getElementById('csvFile');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Please select a CSV file first.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const rows = text.split('\n').map(r => r.trim()).filter(r => r !== '');
+        const headers = rows[0].split(',').map(h => h.trim());
+        const data = rows.slice(1).map(row => {
+          const values = row.split(',').map(v => v.trim());
+          return headers.reduce((obj, header, i) => {
+            obj[header] = values[i];
+            return obj;
+          }, {});
+        });
+
+        // Display preview table
+        let html = `<table><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+        data.forEach(row => {
+          html += '<tr>' + headers.map(h => `<td>${row[h]}</td>`).join('') + '</tr>';
+        });
+        html += '</table>';
+        document.getElementById('preview').innerHTML = html;
+
+        console.log("Parsed CSV data:", data);
+        // TODO: send `data` to backend via fetch if needed
+      };
+      reader.readAsText(file);
+    });
+  </script>
+
+</body>
+</html>
